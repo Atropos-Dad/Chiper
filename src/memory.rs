@@ -23,6 +23,16 @@ impl Memory {
         }
     }
 
+    pub fn read_u16(&self, address: u16) -> u16 {
+        if address < 0xFFF {
+            let hi = self.memory[address as usize] as u16;
+            let lo = self.memory[(address + 1) as usize] as u16;
+            (hi << 8) | lo
+        } else {
+            panic!("Memory read out of bounds: {}", address);
+        }
+    }
+
     pub fn write(&mut self, address: u16, value: u8) {
         if address < 0x1000 {
             self.memory[address as usize] = value;
