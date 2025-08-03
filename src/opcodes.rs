@@ -146,6 +146,179 @@ impl Opcode {
         }
     }
 
-    
+    pub fn execute(&self, cpu: &mut crate::cpu::CPU) {
+        use rand::Rng;
+        
+        match self {
+            Opcode::CallRoutine { address: _ } => {
+                unimplemented!("CallRoutine not implemented for modern CHIP-8")
+            }
+            Opcode::ClearDisplay {} => {
+                cpu.clear_display();
+            }
+            Opcode::Return {} => {
+                if let Some(addr) = cpu.pop_stack() {
+                    cpu.set_program_counter(addr);
+                }
+            }
+            Opcode::Goto { address } => {
+                cpu.set_program_counter(*address);
+            }
+            Opcode::CallSubroutine { address } => {
+                cpu.push_stack(cpu.get_program_counter());
+                cpu.set_program_counter(*address);
+            }
+            Opcode::SkipIfEqual { register, value } => {
+                if cpu.get_register(*register) == *value {
+                    cpu.increment_program_counter();
+                }
+            }
+            Opcode::SkipIfNotEqual { register, value } => {
+                if cpu.get_register(*register) != *value {
+                    cpu.increment_program_counter();
+                }
+            }
+            Opcode::SkipIfRegistersEqual { reg_x, reg_y } => {
+                if cpu.get_register(*reg_x) == cpu.get_register(*reg_y) {
+                    cpu.increment_program_counter();
+                }
+            }
+            Opcode::SetRegister { register, value } => {
+                cpu.set_register(*register, *value);
+            }
+            Opcode::AddToRegister { register, value } => {
+                let current = cpu.get_register(*register);
+                cpu.set_register(*register, current.wrapping_add(*value));
+            }
+            Opcode::AssignRegister { reg_x, reg_y } => {
+                let value = cpu.get_register(*reg_y);
+                cpu.set_register(*reg_x, value);
+            }
+            Opcode::BitwiseOr { reg_x, reg_y } => {
+                let x_val = cpu.get_register(*reg_x);
+                let y_val = cpu.get_register(*reg_y);
+                cpu.set_register(*reg_x, x_val | y_val);
+            }
+            Opcode::BitwiseAnd { reg_x, reg_y } => {
+                let x_val = cpu.get_register(*reg_x);
+                let y_val = cpu.get_register(*reg_y);
+                cpu.set_register(*reg_x, x_val & y_val);
+            }
+            Opcode::BitwiseXor { reg_x, reg_y } => {
+                let x_val = cpu.get_register(*reg_x);
+                let y_val = cpu.get_register(*reg_y);
+                cpu.set_register(*reg_x, x_val ^ y_val);
+            }
+            Opcode::AddRegisters { reg_x, reg_y } => {
+                let x_val = cpu.get_register(*reg_x);
+                let y_val = cpu.get_register(*reg_y);
+                let (result, overflow) = x_val.overflowing_add(y_val);
+                cpu.set_register(*reg_x, result);
+                cpu.set_register(0xF, if overflow { 1 } else { 0 });
+            }
+            Opcode::SubtractRegisters { reg_x, reg_y } => {
+                let x_val = cpu.get_register(*reg_x);
+                let y_val = cpu.get_register(*reg_y);
+                let (result, borrow) = x_val.overflowing_sub(y_val);
+                cpu.set_register(*reg_x, result);
+                cpu.set_register(0xF, if borrow { 0 } else { 1 });
+            }
+            Opcode::ShiftRight { reg_x } => {
+                let value = cpu.get_register(*reg_x);
+                cpu.set_register(0xF, value & 0x1);
+                cpu.set_register(*reg_x, value >> 1);
+            }
+            Opcode::SubtractReverse { reg_x, reg_y } => {
+                let x_val = cpu.get_register(*reg_x);
+                let y_val = cpu.get_register(*reg_y);
+                let (result, borrow) = y_val.overflowing_sub(x_val);
+                cpu.set_register(*reg_x, result);
+                cpu.set_register(0xF, if borrow { 0 } else { 1 });
+            }
+            Opcode::ShiftLeft { reg_x } => {
+                let value = cpu.get_register(*reg_x);
+                cpu.set_register(0xF, (value >> 7) & 0x1);
+                cpu.set_register(*reg_x, value << 1);
+            }
+            Opcode::SkipIfRegNotEqual { reg_x, reg_y } => {
+                if cpu.get_register(*reg_x) != cpu.get_register(*reg_y) {
+                    cpu.increment_program_counter();
+                }
+            }
+            Opcode::SetAddress { address } => {
+                cpu.set_address_register(*address);
+            }
+            Opcode::JumpWithOffset { address } => {
+                cpu.set_program_counter(*address + cpu.get_register(0) as u16);
+            }
+            Opcode::Random { register, value } => {
+                let mut rng = rand::rng();
+                let random: u8 = rng.random();
+                cpu.set_register(*register, random & *value);
+            }
+            Opcode::Draw { reg_x, reg_y, height } => {
+                let x = cpu.get_register(*reg_x);
+                let y = cpu.get_register(*reg_y);
+                let collision = cpu.draw_sprite(x, y, *height);
+                cpu.set_register(0xF, if collision { 1 } else { 0 });
+            }
+            Opcode::SkipIfKeyPressed { register } => {
+                let key = cpu.get_register(*register) & 0xF;
+                if cpu.is_key_pressed(key) {
+                    cpu.increment_program_counter();
+                }
+            }
+            Opcode::SkipIfKeyNotPressed { register } => {
+                let key = cpu.get_register(*register) & 0xF;
+                if !cpu.is_key_pressed(key) {
+                    cpu.increment_program_counter();
+                }
+            }
+            Opcode::GetDelayTimer { register } => {
+                cpu.set_register(*register, cpu.get_delay_timer());
+            }
+            Opcode::WaitForKey { register } => {
+                cpu.wait_for_key(*register);
+            }
+            Opcode::SetDelayTimer { register } => {
+                let value = cpu.get_register(*register);
+                cpu.set_delay_timer(value);
+            }
+            Opcode::SetSoundTimer { register } => {
+                let value = cpu.get_register(*register);
+                cpu.set_sound_timer(value);
+            }
+            Opcode::AddToAddress { register } => {
+                let current = cpu.get_address_register();
+                let value = cpu.get_register(*register) as u16;
+                cpu.set_address_register(current.wrapping_add(value));
+            }
+            Opcode::SetSpriteAddress { register } => {
+                let sprite_idx = cpu.get_register(*register) & 0xF;
+                cpu.set_address_register(sprite_idx as u16 * 5);
+            }
+            Opcode::StoreBCD { register } => {
+                let value = cpu.get_register(*register);
+                let i = cpu.get_address_register();
+                cpu.write_memory(i, value / 100);
+                cpu.write_memory(i + 1, (value % 100) / 10);
+                cpu.write_memory(i + 2, value % 10);
+            }
+            Opcode::StoreRegisters { reg_x } => {
+                let i = cpu.get_address_register();
+                for idx in 0..=*reg_x {
+                    let value = cpu.get_register(idx);
+                    cpu.write_memory(i + idx as u16, value);
+                }
+            }
+            Opcode::LoadRegisters { reg_x } => {
+                let i = cpu.get_address_register();
+                for idx in 0..=*reg_x {
+                    let value = cpu.read_memory(i + idx as u16);
+                    cpu.set_register(idx, value);
+                }
+            }
+        }
+    }
 }
 
