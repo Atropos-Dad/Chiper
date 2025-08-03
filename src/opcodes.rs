@@ -145,12 +145,6 @@ impl Opcode {
             _ => panic!("Unknown opcode: {:#06X}", opcode),
         }
     }
+
 }
-
-// impl Opcodes {
-//     pub fn new() -> Self {
-//         Self { opcode: 0 } // initialize opcode to 0!
-//     }
-// }
-
 
