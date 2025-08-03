@@ -1,1 +1,4 @@
 /target
+*.ch8
+*.log
+*.md
