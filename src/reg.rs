@@ -6,7 +6,7 @@ thus, it should be avoided. In an addition operation, VF is the carry flag, whil
 
 const DATA_REGISTERS_SIZE: usize = 16; // how many data registers we have
 
-struct Registers {
+pub struct Registers {
     data_registers: [u8; DATA_REGISTERS_SIZE],
     address_register: u16, // 12 bits wide, can we enforce this?
 }
