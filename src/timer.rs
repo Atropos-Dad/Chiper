@@ -1,5 +1,4 @@
 
-use beep::beep;
 
 pub struct Timers{
     delay_timer: u8,
@@ -19,7 +18,6 @@ impl Timers {
             self.delay_timer -= 1;
         }
         if self.sound_timer > 0 {
-            beep(440); // 440 Hz tone
             self.sound_timer -= 1;
         }
     }
