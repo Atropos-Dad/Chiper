@@ -19,11 +19,11 @@ const FONT_CHAR_HEIGHT: u8 = 5;
 use crate::font;
 
 
-struct Display {
+pub struct Display {
     display: [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT], // 64x32 pixels, 1 bit per pixel
 }
 
-struct Sprite {
+pub struct Sprite {
     width: u8,
     height: u8,
     data: [u8; 8],

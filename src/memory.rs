@@ -14,6 +14,22 @@ impl Memory {
     pub fn new() -> Self {
         Self { memory: [0; 4096] } // initialize memory to 0!
     }
+
+    pub fn read(&self, address: u16) -> u8 {
+        if address < 0x1000 {
+            self.memory[address as usize]
+        } else {
+            panic!("Memory read out of bounds: {}", address);
+        }
+    }
+
+    pub fn write(&mut self, address: u16, value: u8) {
+        if address < 0x1000 {
+            self.memory[address as usize] = value;
+        } else {
+            panic!("Memory write out of bounds: {}", address);
+        }
+    }
 }
 
 
