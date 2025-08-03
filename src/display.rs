@@ -111,6 +111,14 @@ impl Display {
         Ok(())
     }
 
+    pub fn get_pixel(&self, x: u8, y: u8) -> bool {
+        self.display[y as usize][x as usize]
+    }
+
+    pub fn toggle_pixel(&mut self, x: u8, y: u8) {
+        self.display[y as usize][x as usize] ^= true;
+    }
+
     pub fn create_character_sprite(character: char) -> Sprite {
         // Get the 5-byte font data for this character
         let font_data = font::char_to_sprite_data(character);
