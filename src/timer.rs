@@ -21,5 +21,17 @@ impl Timers {
             self.sound_timer -= 1;
         }
     }
+
+    pub fn get_delay(&self) -> u8 {
+        self.delay_timer
+    }
+
+    pub fn set_delay(&mut self, value: u8) {
+        self.delay_timer = value;
+    }
+
+    pub fn set_sound(&mut self, value: u8) {
+        self.sound_timer = value;
+    }
 }
 
