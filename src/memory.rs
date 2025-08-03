@@ -40,8 +40,30 @@ impl Memory {
             panic!("Memory write out of bounds: {}", address);
         }
     }
+    
 }
 
+
+pub struct rom_file {
+    pub data: Vec<u8>,
+}
+
+impl rom_file {
+    pub fn new(data: Vec<u8>) -> Self {
+        Self { data }
+    }
+
+    pub fn load_to_memory(&self, memory: &mut Memory, start_address: u16) {
+        for (i, &byte) in self.data.iter().enumerate() {
+            memory.write(start_address + i as u16, byte);
+        }
+    }
+
+    pub fn load_from_file(file_path: &str) -> Result<Self, std::io::Error> {
+        let data = std::fs::read(file_path)?;
+        Ok(Self { data })
+    }
+}
 
 // im pretty sure an array like this is the best way to do it. There might be something about how 
 // programs interface that we might need to consider, but that is for sure a future us problem.
