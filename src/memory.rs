@@ -6,7 +6,7 @@
 // /re reserved for display refresh, and the 96 bytes below that (0xEA0-0xEFF) were reserved for the call stack, 
 // internal use, and other variables. 
 
-struct Memory {
+pub struct Memory {
     memory: [u8; 4096],
 }
 
@@ -33,13 +33,33 @@ modern implementations usually have more.[22][23]
 
 const STACK_SIZE: usize = 12;
 
-struct Stack {
-    stack: [u16; STACK_SIZE], // 48 bytes total, 13 bits to store a pointer so we need 16 bits total. We are going to emulate 12 for nesting tho.
+pub struct Stack {
+    stack: [Option<u16>; STACK_SIZE], // 48 bytes total, 13 bits to store a pointer so we need 16 bits total. We are going to emulate 12 for nesting tho.
 
 }
 
 impl Stack {
     pub fn new() -> Self {
-        Self { stack: [0; STACK_SIZE] } // initialize stack to 0!
+        Self { stack: [None; STACK_SIZE] } // Use None for empty slots
+    }
+
+    pub fn pop(&mut self) -> Option<u16> {
+        for i in (0..STACK_SIZE).rev() {
+            if self.stack[i].is_some() {
+                let value = self.stack[i].take(); // take() replaces with None
+                return value;
+            }
+        }
+        None
+    }
+
+    pub fn push(&mut self, value: u16) -> Result<(), &'static str> {
+        for i in 0..STACK_SIZE {
+            if self.stack[i].is_none() {
+                self.stack[i] = Some(value);
+                return Ok(());
+            }
+        }
+        Err("Stack overflow")
     }
 }
