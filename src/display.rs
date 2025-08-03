@@ -8,9 +8,19 @@ The carry flag (VF) is set to 1 if any screen pixels are flipped from set to uns
 This is used for collision detection. 
  */
 
+// Display constants
+const DISPLAY_WIDTH: usize = 64;
+const DISPLAY_HEIGHT: usize = 32;
+
+// Font constants
+const FONT_CHAR_WIDTH: u8 = 4;
+const FONT_CHAR_HEIGHT: u8 = 5;
+
+use crate::font;
+
 
 struct Display {
-    display: [[bool; 64]; 32], // 64x32 pixels, 1 bit per pixel
+    display: [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT], // 64x32 pixels, 1 bit per pixel
 }
 
 struct Sprite {
@@ -26,28 +36,89 @@ impl Sprite {
 }
 
 
+use crossterm::{
+    cursor,
+    style::Print,
+    terminal::{self, ClearType},
+    ExecutableCommand,
+};
+use std::io::{self, stdout};
+
 impl Display {
     pub fn new() -> Self {
-        Self { display: [[false; 64]; 32] }
+        Self { display: [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT] }
     }
 
     pub fn clear(&mut self) {
         // what if the fastest way to do this is to just set the whole array to false?
-        self.display = [[false; 64]; 32];
+        self.display = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
     }
 
-    // pub fn clear(&mut self) {
-    //     // loop through the display and set each pixel to false
-    //     for row in self.display.iter_mut() {
-    //         for pixel in row.iter_mut() {
-    //             *pixel = false;
-    //         }
-    //     }
-    // }
+  
 
-    pub fn draw_sprite(&mut self, x: u8, y: u8, sprite: &Sprite) {
-        // we need to draw the sprite at the given x and y coordinates
-        // we need to check if the sprite is out of bounds
-        // we need to check if the sprite is colliding with the screen
+    pub fn draw_sprite(&mut self, x: u8, y: u8, sprite: &Sprite) -> bool{
+        // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision. The interpreter reads n
+        // bytes from memory, starting at the address stored in I. These bytes are then displayed as sprites on screen
+        // at coordinates (Vx, Vy). Sprites are XOR’d onto the existing screen. If this causes any pixels to be erased,
+        // VF is set to 1, otherwise it is set to 0. If the sprite is positioned so part of it is outside the coordinates of
+        // the display, it wraps around to the opposite side of the screen.
+        let width = sprite.width as usize;
+        let height = sprite.height as usize;
+        let mut collision = false;
+
+        for row in 0..height {
+            for col in 0..width {
+                let sprite_pixel = (sprite.data[row] >> (7 - col)) & 1;
+                let display_x = (x as usize + col) % DISPLAY_WIDTH;
+                let display_y = (y as usize + row) % DISPLAY_HEIGHT;
+
+                if sprite_pixel == 1 {
+                    self.display[display_y][display_x] ^= true; // xor 
+                    if self.display[display_y][display_x] == false { // if the pixel was already set, it will be unset now
+                        collision = true;
+                    }
+                }
+            }
+        }
+
+        // return if collision (i.e. flag (VF) should be set)
+        if collision {
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn render(&self) -> io::Result<()> {
+        let mut stdout = stdout();
+        
+        // Clear screen and move cursor to top
+        stdout.execute(terminal::Clear(ClearType::All))?;
+        stdout.execute(cursor::MoveTo(0, 0))?;
+        
+        // Draw each pixel as a character
+        for y in 0..DISPLAY_HEIGHT {
+            for x in 0..DISPLAY_WIDTH {
+                if self.display[y][x] {
+                    stdout.execute(Print("█"))?; // Full block
+                } else {
+                    stdout.execute(Print(" "))?; // Space
+                }
+            }
+            stdout.execute(Print("\n"))?;
+        }
+        
+        Ok(())
+    }
+
+    pub fn create_character_sprite(character: char) -> Sprite {
+        // Get the 5-byte font data for this character
+        let font_data = font::char_to_sprite_data(character);
+        
+        // Create sprite data array (pad with zeros since font is 5 bytes, sprite can hold 8)
+        let mut sprite_data = [0u8; 8];
+        sprite_data[0..5].copy_from_slice(font_data);
+        
+        Sprite::new(FONT_CHAR_WIDTH, FONT_CHAR_HEIGHT, sprite_data) // CHIP-8 font characters are 4 pixels wide, 5 pixels tall
     }
 }
