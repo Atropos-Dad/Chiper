@@ -16,6 +16,18 @@ const DISPLAY_HEIGHT: usize = 32;
 const FONT_CHAR_WIDTH: u8 = 4;
 const FONT_CHAR_HEIGHT: u8 = 5;
 
+// Sprite constants
+const SPRITE_DATA_SIZE: usize = 8;         // Maximum sprite data array size
+const PIXEL_BIT_SHIFT: u8 = 7;             // Bit shift for pixel extraction
+
+// Phosphor display constants
+const MAX_PHOSPHOR_VALUE: u8 = 255;        // Maximum phosphor brightness
+const PHOSPHOR_DECAY_RATE: u8 = 15;        // How fast phosphor decays per frame
+const RGBA_PIXEL_SIZE: usize = 4;          // Bytes per RGBA pixel
+const RED_CHANNEL_DIVISOR: u8 = 4;         // Red channel brightness divisor
+const BLUE_CHANNEL_DIVISOR: u8 = 8;        // Blue channel brightness divisor
+const ALPHA_CHANNEL_VALUE: u8 = 255;       // Alpha channel (fully opaque)
+
 use crate::font;
 
 
@@ -27,11 +39,11 @@ pub struct Display {
 pub struct Sprite {
     width: u8,
     height: u8,
-    data: [u8; 8],
+    data: [u8; SPRITE_DATA_SIZE],
 }
 
 impl Sprite {
-    pub fn new(width: u8, height: u8, data: [u8; 8]) -> Self {
+    pub fn new(width: u8, height: u8, data: [u8; SPRITE_DATA_SIZE]) -> Self {
         Self { width, height, data }
     }
 }
@@ -63,7 +75,7 @@ impl Display {
 
         for row in 0..height {
             for col in 0..width {
-                let sprite_pixel = (sprite.data[row] >> (7 - col)) & 1;
+                let sprite_pixel = (sprite.data[row] >> (PIXEL_BIT_SHIFT - col)) & 1;
                 let display_x = (x as usize + col) % DISPLAY_WIDTH;
                 let display_y = (y as usize + row) % DISPLAY_HEIGHT;
 
@@ -76,7 +88,7 @@ impl Display {
                         collision = true;
                     } else if self.display[display_y][display_x] {
                         // Pixel turned on - set phosphor to max
-                        self.phosphor[display_y][display_x] = 255;
+                        self.phosphor[display_y][display_x] = MAX_PHOSPHOR_VALUE;
                     }
                 }
             }
@@ -92,27 +104,25 @@ impl Display {
 
     pub fn render_to_buffer(&mut self, buffer: &mut [u8]) {
         // Convert 64x32 boolean display to RGBA pixel buffer with phosphor simulation
-        // Each pixel is 4 bytes (RGBA)
-        const PIXEL_SIZE: usize = 4;
-        const DECAY_RATE: u8 = 15; // How fast phosphor decays
+        // Each pixel is 4 bytes (RGBA) // How fast phosphor decays
         
         for y in 0..DISPLAY_HEIGHT {
             for x in 0..DISPLAY_WIDTH {
-                let pixel_index = (y * DISPLAY_WIDTH + x) * PIXEL_SIZE;
+                let pixel_index = (y * DISPLAY_WIDTH + x) * RGBA_PIXEL_SIZE;
                 
                 // Update phosphor decay
                 if !self.display[y][x] && self.phosphor[y][x] > 0 {
-                    self.phosphor[y][x] = self.phosphor[y][x].saturating_sub(DECAY_RATE);
+                    self.phosphor[y][x] = self.phosphor[y][x].saturating_sub(PHOSPHOR_DECAY_RATE);
                 }
                 
                 // Render based on phosphor value (not just on/off)
                 let brightness = self.phosphor[y][x];
                 
                 // Classic green phosphor color with brightness
-                buffer[pixel_index] = (brightness / 4).min(255);     // R (slight red)
-                buffer[pixel_index + 1] = brightness;                // G (full green)
-                buffer[pixel_index + 2] = (brightness / 8).min(255); // B (very slight blue)
-                buffer[pixel_index + 3] = 255;                        // A (always opaque)
+                buffer[pixel_index] = (brightness / RED_CHANNEL_DIVISOR).min(ALPHA_CHANNEL_VALUE);     // R (slight red)
+                buffer[pixel_index + 1] = brightness;                                                   // G (full green)
+                buffer[pixel_index + 2] = (brightness / BLUE_CHANNEL_DIVISOR).min(ALPHA_CHANNEL_VALUE); // B (very slight blue)
+                buffer[pixel_index + 3] = ALPHA_CHANNEL_VALUE;                                          // A (always opaque)
             }
         }
     }
@@ -132,7 +142,7 @@ impl Display {
         
         // If pixel is now on, set phosphor to max
         if self.display[y][x] {
-            self.phosphor[y][x] = 255;
+            self.phosphor[y][x] = MAX_PHOSPHOR_VALUE;
         }
         // If pixel turned off, phosphor will decay naturally
     }
@@ -142,7 +152,7 @@ impl Display {
         let font_data = font::char_to_sprite_data(character);
         
         // Create sprite data array (pad with zeros since font is 5 bytes, sprite can hold 8)
-        let mut sprite_data = [0u8; 8];
+        let mut sprite_data = [0u8; SPRITE_DATA_SIZE];
         sprite_data[0..5].copy_from_slice(font_data);
         
         Sprite::new(FONT_CHAR_WIDTH, FONT_CHAR_HEIGHT, sprite_data) // CHIP-8 font characters are 4 pixels wide, 5 pixels tall

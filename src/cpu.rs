@@ -7,6 +7,14 @@ use crate::display::{Display};
 use crate::opcodes::Opcode;
 use crate::input::InputState;
 
+// CPU constants
+const PROGRAM_START_ADDRESS: u16 = 0x200;  // CHIP-8 programs start at 0x200
+const INSTRUCTION_SIZE: u16 = 2;            // Size of each instruction in bytes
+const DISPLAY_HEIGHT: u8 = 32;              // Display height for wrapping
+const DISPLAY_WIDTH: u8 = 64;               // Display width for wrapping
+const SPRITE_WIDTH: u8 = 8;                 // Standard sprite width
+const PIXEL_BIT_SHIFT: u8 = 7;              // Bit shift for pixel extraction
+
 pub struct CPU {
     registers: Registers,
     memory: Memory,
@@ -26,7 +34,7 @@ impl CPU {
             timers: Timers::new(),
             display: Display::new(),
             input: InputState::new(),
-            program_counter: 0x200, // CHIP-8 programs start at 0x200
+            program_counter: PROGRAM_START_ADDRESS,
         }
     }
 
@@ -35,7 +43,7 @@ impl CPU {
         let raw_opcode = self.memory.read_u16(self.program_counter);
 
         // increment program counter
-        self.program_counter += 2;
+        self.program_counter += INSTRUCTION_SIZE;
 
         // decode
         let opcode: Opcode = Opcode::from_raw(raw_opcode);
@@ -84,7 +92,7 @@ impl CPU {
     }
 
     pub fn increment_program_counter(&mut self) {
-        self.program_counter += 2;
+        self.program_counter += INSTRUCTION_SIZE;
     }
 
     pub fn clear_display(&mut self) {
@@ -97,11 +105,11 @@ impl CPU {
         
         for row in 0..height {
             let sprite_byte = self.memory.read(addr + row as u16);
-            let y_pos = (y + row) % 32;
+            let y_pos = (y + row) % DISPLAY_HEIGHT;
             
-            for col in 0..8 {
-                let x_pos = (x + col) % 64;
-                let pixel = (sprite_byte >> (7 - col)) & 1;
+            for col in 0..SPRITE_WIDTH {
+                let x_pos = (x + col) % DISPLAY_WIDTH;
+                let pixel = (sprite_byte >> (PIXEL_BIT_SHIFT - col)) & 1;
                 
                 if pixel == 1 {
                     if self.display.get_pixel(x_pos, y_pos) {

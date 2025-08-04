@@ -5,6 +5,7 @@ thus, it should be avoided. In an addition operation, VF is the carry flag, whil
 //  The address register, which is named I, is 12 bits wide and is used with several opcodes that involve memory operations. 
 
 const DATA_REGISTERS_SIZE: usize = 16; // how many data registers we have
+const ADDRESS_REGISTER_MAX: u16 = 0xFFF; // Maximum value for address register (12-bit limit)
 
 pub struct Registers {
     data_registers: [u8; DATA_REGISTERS_SIZE],
@@ -21,7 +22,7 @@ impl Registers {
     }
 
     pub fn set_i(&mut self, value: u16) {
-        if value > 0xFFF {
+        if value > ADDRESS_REGISTER_MAX {
             panic!("Address register value out of bounds: {}", value);
         }
          // Ensure the value is within the 12-bit range

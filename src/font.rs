@@ -6,7 +6,12 @@ Only the upper 4 bits of each byte are used.
 Characters 0-F (hexadecimal digits)
 */
 
-pub const FONT_SET: [u8; 80] = [
+// Font constants
+const FONT_SET_SIZE: usize = 80;           // Total font data size (16 chars × 5 bytes)
+const FONT_CHAR_SIZE: usize = 5;           // Size of each font character in bytes
+const HEX_DIGIT_OFFSET: u8 = 10;           // Offset for hex digits A-F
+
+pub const FONT_SET: [u8; FONT_SET_SIZE] = [
     // Character '0'
     0xF0, // ****
     0x90, // *  *
@@ -121,16 +126,16 @@ pub const FONT_SET: [u8; 80] = [
 ];
 
 pub fn get_character_sprite(character: u8) -> &'static [u8] {
-    let start_index = (character as usize) * 5;
-    &FONT_SET[start_index..start_index + 5]
+    let start_index = (character as usize) * FONT_CHAR_SIZE;
+    &FONT_SET[start_index..start_index + FONT_CHAR_SIZE]
 }
 
 pub fn char_to_sprite_data(character: char) -> &'static [u8] {
     // Convert character to hex digit (0-F)
     let hex_value = match character {
         '0'..='9' => character as u8 - b'0',
-        'A'..='F' => character as u8 - b'A' + 10,
-        'a'..='f' => character as u8 - b'a' + 10,
+        'A'..='F' => character as u8 - b'A' + HEX_DIGIT_OFFSET,
+        'a'..='f' => character as u8 - b'a' + HEX_DIGIT_OFFSET,
         _ => 0, // Default to '0' for invalid characters
     };
     

@@ -52,6 +52,15 @@ FX55 	MEM 	reg_dump(Vx, &I) 	Stores from V0 to VX (including VX) in memory, star
 FX65 	MEM 	reg_load(Vx, &I) 	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d][24]
  */
 
+// Key opcode constants
+const VF_REGISTER_INDEX: u8 = 0xF;        // Index of VF register (flags)
+const V0_REGISTER_INDEX: u8 = 0;          // Index of V0 register
+const INSTRUCTION_SIZE: u16 = 2;          // Size of each instruction in bytes
+const NIBBLE_MASK: u8 = 0xF;              // Mask for single nibble
+const FONT_CHAR_SIZE: u16 = 5;            // Size of each font character in bytes
+const BCD_HUNDREDS: u8 = 100;             // BCD hundreds divisor
+const BCD_TENS: u8 = 10;                  // BCD tens divisor
+
 pub enum Opcode {
     // opcode: u16, // 2 bytes, 16 bits total, big endian...
     CallRoutine { address: u16 }, // 0NNN
@@ -214,18 +223,18 @@ impl Opcode {
                 let y_val = cpu.get_register(*reg_y);
                 let (result, overflow) = x_val.overflowing_add(y_val);
                 cpu.set_register(*reg_x, result);
-                cpu.set_register(0xF, if overflow { 1 } else { 0 });
+                cpu.set_register(VF_REGISTER_INDEX, if overflow { 1 } else { 0 });
             }
             Opcode::SubtractRegisters { reg_x, reg_y } => {
                 let x_val = cpu.get_register(*reg_x);
                 let y_val = cpu.get_register(*reg_y);
                 let (result, borrow) = x_val.overflowing_sub(y_val);
                 cpu.set_register(*reg_x, result);
-                cpu.set_register(0xF, if borrow { 0 } else { 1 });
+                cpu.set_register(VF_REGISTER_INDEX, if borrow { 0 } else { 1 });
             }
             Opcode::ShiftRight { reg_x } => {
                 let value = cpu.get_register(*reg_x);
-                cpu.set_register(0xF, value & 0x1);
+                cpu.set_register(VF_REGISTER_INDEX, value & 0x1);
                 cpu.set_register(*reg_x, value >> 1);
             }
             Opcode::SubtractReverse { reg_x, reg_y } => {
@@ -233,11 +242,11 @@ impl Opcode {
                 let y_val = cpu.get_register(*reg_y);
                 let (result, borrow) = y_val.overflowing_sub(x_val);
                 cpu.set_register(*reg_x, result);
-                cpu.set_register(0xF, if borrow { 0 } else { 1 });
+                cpu.set_register(VF_REGISTER_INDEX, if borrow { 0 } else { 1 });
             }
             Opcode::ShiftLeft { reg_x } => {
                 let value = cpu.get_register(*reg_x);
-                cpu.set_register(0xF, (value >> 7) & 0x1);
+                cpu.set_register(VF_REGISTER_INDEX, (value >> 7) & 0x1);
                 cpu.set_register(*reg_x, value << 1);
             }
             Opcode::SkipIfRegNotEqual { reg_x, reg_y } => {
@@ -249,7 +258,7 @@ impl Opcode {
                 cpu.set_address_register(*address);
             }
             Opcode::JumpWithOffset { address } => {
-                cpu.set_program_counter(*address + cpu.get_register(0) as u16);
+                cpu.set_program_counter(*address + cpu.get_register(V0_REGISTER_INDEX) as u16);
             }
             Opcode::Random { register, value } => {
                 let mut rng = rand::rng();
@@ -260,16 +269,16 @@ impl Opcode {
                 let x = cpu.get_register(*reg_x);
                 let y = cpu.get_register(*reg_y);
                 let collision = cpu.draw_sprite(x, y, *height);
-                cpu.set_register(0xF, if collision { 1 } else { 0 });
+                cpu.set_register(VF_REGISTER_INDEX, if collision { 1 } else { 0 });
             }
             Opcode::SkipIfKeyPressed { register } => {
-                let key = cpu.get_register(*register) & 0xF;
+                let key = cpu.get_register(*register) & NIBBLE_MASK;
                 if cpu.is_key_pressed(key) {
                     cpu.increment_program_counter();
                 }
             }
             Opcode::SkipIfKeyNotPressed { register } => {
-                let key = cpu.get_register(*register) & 0xF;
+                let key = cpu.get_register(*register) & NIBBLE_MASK;
                 if !cpu.is_key_pressed(key) {
                     cpu.increment_program_counter();
                 }
@@ -280,7 +289,7 @@ impl Opcode {
             Opcode::WaitForKey { register } => {
                 if !cpu.wait_for_key(*register) {
                     // Still waiting for key, go back to execute this instruction again
-                    cpu.set_program_counter(cpu.get_program_counter() - 2);
+                    cpu.set_program_counter(cpu.get_program_counter() - INSTRUCTION_SIZE);
                 }
             }
             Opcode::SetDelayTimer { register } => {
@@ -297,14 +306,14 @@ impl Opcode {
                 cpu.set_address_register(current.wrapping_add(value));
             }
             Opcode::SetSpriteAddress { register } => {
-                let sprite_idx = cpu.get_register(*register) & 0xF;
-                cpu.set_address_register(sprite_idx as u16 * 5);
+                let sprite_idx = cpu.get_register(*register) & NIBBLE_MASK;
+                cpu.set_address_register(sprite_idx as u16 * FONT_CHAR_SIZE);
             }
             Opcode::StoreBCD { register } => {
                 let value = cpu.get_register(*register);
                 let i = cpu.get_address_register();
-                cpu.write_memory(i, value / 100);
-                cpu.write_memory(i + 1, (value % 100) / 10);
+                cpu.write_memory(i, value / BCD_HUNDREDS);
+                cpu.write_memory(i + 1, (value % BCD_HUNDREDS) / BCD_TENS);
                 cpu.write_memory(i + 2, value % 10);
             }
             Opcode::StoreRegisters { reg_x } => {

@@ -4,6 +4,13 @@ use winit::event::{KeyboardInput, ElementState, VirtualKeyCode};
 use winit::window::Window;
 use std::time::{Duration, Instant};
 
+// Emulator constants
+const PROGRAM_START_ADDRESS: u16 = 0x200;   // ROM loading start address
+const DEFAULT_SCALE_FACTOR: u32 = 10;       // Default window scale factor
+const DEFAULT_CYCLES_PER_FRAME: u32 = 10;   // Default CPU cycles per frame
+const DEFAULT_TARGET_FPS: u32 = 60;          // Default target frames per second
+const NANOSECONDS_PER_SECOND: u64 = 1_000_000_000;
+
 pub struct EmulatorConfig {
     pub scale_factor: u32,
     pub cycles_per_frame: u32,
@@ -14,9 +21,9 @@ pub struct EmulatorConfig {
 impl Default for EmulatorConfig {
     fn default() -> Self {
         Self {
-            scale_factor: 10,
-            cycles_per_frame: 10,
-            target_fps: 60,
+            scale_factor: DEFAULT_SCALE_FACTOR,
+            cycles_per_frame: DEFAULT_CYCLES_PER_FRAME,
+            target_fps: DEFAULT_TARGET_FPS,
             rom_path: "PONG.ch8".to_string(),
         }
     }
@@ -46,9 +53,9 @@ impl Emulator {
             Ok(rom) => {
                 println!("Loaded {} successfully!", config.rom_path);
                 for (i, byte) in rom.data.iter().enumerate() {
-                    cpu.write_memory(0x200 + i as u16, *byte);
+                    cpu.write_memory(PROGRAM_START_ADDRESS + i as u16, *byte);
                 }
-                cpu.set_program_counter(0x200);
+                cpu.set_program_counter(PROGRAM_START_ADDRESS);
             }
             Err(e) => {
                 eprintln!("Failed to load {}: {}", config.rom_path, e);
@@ -82,7 +89,7 @@ impl Emulator {
     pub fn update(&mut self) {
         let now = Instant::now();
         let elapsed = now.duration_since(self.last_update);
-        let frame_duration = Duration::from_nanos(1_000_000_000 / self.config.target_fps as u64);
+        let frame_duration = Duration::from_nanos(NANOSECONDS_PER_SECOND / self.config.target_fps as u64);
         
         if elapsed >= frame_duration {
             if !self.cpu.is_waiting_for_key() {
@@ -103,6 +110,7 @@ impl Emulator {
     }
 
     pub fn window_dimensions(config: &EmulatorConfig) -> (u32, u32) {
-        (64 * config.scale_factor, 32 * config.scale_factor)
+        let (display_width, display_height) = crate::display::Display::get_dimensions();
+        (display_width * config.scale_factor, display_height * config.scale_factor)
     }
 }

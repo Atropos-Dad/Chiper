@@ -1,3 +1,8 @@
+// CHIP-8 memory layout constants
+const MEMORY_SIZE: usize = 4096;           // Total memory size (4KB)
+const MEMORY_SIZE_HEX: u16 = 0x1000;      // Memory size as hex  
+const MEMORY_MAX_ADDRESS: u16 = 0xFFF;    // Maximum valid memory address
+
 // 4096 (0x1000) memory locations, all of which are 8 bits (a byte) 
 // which is where the term CHIP-8 originated. However, the CHIP-8 interpreter 
 // itself occupies the first 512 bytes of the memory space on these machines. 
@@ -7,16 +12,16 @@
 // internal use, and other variables. 
 
 pub struct Memory {
-    memory: [u8; 4096],
+    memory: [u8; MEMORY_SIZE],
 }
 
 impl Memory {
     pub fn new() -> Self {
-        Self { memory: [0; 4096] } // initialize memory to 0!
+        Self { memory: [0; MEMORY_SIZE] } // initialize memory to 0!
     }
 
     pub fn read(&self, address: u16) -> u8 {
-        if address < 0x1000 {
+        if address < MEMORY_SIZE_HEX {
             self.memory[address as usize]
         } else {
             panic!("Memory read out of bounds: {}", address);
@@ -24,7 +29,7 @@ impl Memory {
     }
 
     pub fn read_u16(&self, address: u16) -> u16 {
-        if address < 0xFFF {
+        if address < MEMORY_MAX_ADDRESS {
             let hi = self.memory[address as usize] as u16;
             let lo = self.memory[(address + 1) as usize] as u16;
             (hi << 8) | lo
@@ -34,7 +39,7 @@ impl Memory {
     }
 
     pub fn write(&mut self, address: u16, value: u8) {
-        if address < 0x1000 {
+        if address < MEMORY_SIZE_HEX {
             self.memory[address as usize] = value;
         } else {
             panic!("Memory write out of bounds: {}", address);
