@@ -21,6 +21,7 @@ use crate::font;
 
 pub struct Display {
     display: [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT], // 64x32 pixels, 1 bit per pixel
+    phosphor: [[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT], // Phosphor decay values (0-255)
 }
 
 pub struct Sprite {
@@ -36,21 +37,15 @@ impl Sprite {
 }
 
 
-use crossterm::{
-    cursor,
-    style::Print,
-    terminal::{self, ClearType},
-    ExecutableCommand,
-};
-use std::io::{self, stdout};
-
 impl Display {
     pub fn new() -> Self {
-        Self { display: [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT] }
+        Self { 
+            display: [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
+            phosphor: [[0; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
+        }
     }
 
     pub fn clear(&mut self) {
-        // what if the fastest way to do this is to just set the whole array to false?
         self.display = [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT];
     }
 
@@ -59,7 +54,7 @@ impl Display {
     pub fn draw_sprite(&mut self, x: u8, y: u8, sprite: &Sprite) -> bool{
         // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision. The interpreter reads n
         // bytes from memory, starting at the address stored in I. These bytes are then displayed as sprites on screen
-        // at coordinates (Vx, Vy). Sprites are XOR’d onto the existing screen. If this causes any pixels to be erased,
+        // at coordinates (Vx, Vy). Sprites are XOR'd onto the existing screen. If this causes any pixels to be erased,
         // VF is set to 1, otherwise it is set to 0. If the sprite is positioned so part of it is outside the coordinates of
         // the display, it wraps around to the opposite side of the screen.
         let width = sprite.width as usize;
@@ -73,9 +68,15 @@ impl Display {
                 let display_y = (y as usize + row) % DISPLAY_HEIGHT;
 
                 if sprite_pixel == 1 {
+                    let was_on = self.display[display_y][display_x];
                     self.display[display_y][display_x] ^= true; // xor 
-                    if self.display[display_y][display_x] == false { // if the pixel was already set, it will be unset now
+                    
+                    if was_on && !self.display[display_y][display_x] { 
+                        // Pixel turned off - collision detected
                         collision = true;
+                    } else if self.display[display_y][display_x] {
+                        // Pixel turned on - set phosphor to max
+                        self.phosphor[display_y][display_x] = 255;
                     }
                 }
             }
@@ -89,26 +90,35 @@ impl Display {
         }
     }
 
-    pub fn render(&self) -> io::Result<()> {
-        let mut stdout = stdout();
+    pub fn render_to_buffer(&mut self, buffer: &mut [u8]) {
+        // Convert 64x32 boolean display to RGBA pixel buffer with phosphor simulation
+        // Each pixel is 4 bytes (RGBA)
+        const PIXEL_SIZE: usize = 4;
+        const DECAY_RATE: u8 = 15; // How fast phosphor decays
         
-        // Clear screen and move cursor to top
-        stdout.execute(terminal::Clear(ClearType::All))?;
-        stdout.execute(cursor::MoveTo(0, 0))?;
-        
-        // Draw each pixel as a character
         for y in 0..DISPLAY_HEIGHT {
             for x in 0..DISPLAY_WIDTH {
-                if self.display[y][x] {
-                    stdout.execute(Print("█"))?; // Full block
-                } else {
-                    stdout.execute(Print(" "))?; // Space
+                let pixel_index = (y * DISPLAY_WIDTH + x) * PIXEL_SIZE;
+                
+                // Update phosphor decay
+                if !self.display[y][x] && self.phosphor[y][x] > 0 {
+                    self.phosphor[y][x] = self.phosphor[y][x].saturating_sub(DECAY_RATE);
                 }
+                
+                // Render based on phosphor value (not just on/off)
+                let brightness = self.phosphor[y][x];
+                
+                // Classic green phosphor color with brightness
+                buffer[pixel_index] = (brightness / 4).min(255);     // R (slight red)
+                buffer[pixel_index + 1] = brightness;                // G (full green)
+                buffer[pixel_index + 2] = (brightness / 8).min(255); // B (very slight blue)
+                buffer[pixel_index + 3] = 255;                        // A (always opaque)
             }
-            stdout.execute(Print("\n"))?;
         }
-        
-        Ok(())
+    }
+
+    pub fn get_dimensions() -> (u32, u32) {
+        (DISPLAY_WIDTH as u32, DISPLAY_HEIGHT as u32)
     }
 
     pub fn get_pixel(&self, x: u8, y: u8) -> bool {
@@ -116,7 +126,15 @@ impl Display {
     }
 
     pub fn toggle_pixel(&mut self, x: u8, y: u8) {
-        self.display[y as usize][x as usize] ^= true;
+        let x = x as usize;
+        let y = y as usize;
+        self.display[y][x] ^= true;
+        
+        // If pixel is now on, set phosphor to max
+        if self.display[y][x] {
+            self.phosphor[y][x] = 255;
+        }
+        // If pixel turned off, phosphor will decay naturally
     }
 
     pub fn create_character_sprite(character: char) -> Sprite {

@@ -5,15 +5,16 @@ use crate::reg::Registers;
 use crate::timer::Timers;
 use crate::display::{Display};
 use crate::opcodes::Opcode;
+use crate::input::InputState;
+
 pub struct CPU {
     registers: Registers,
     memory: Memory,
     stack: Stack,
     timers: Timers,
     display: Display,
+    input: InputState,
     program_counter: u16,
-
-    
 }
 
 impl CPU {
@@ -24,19 +25,17 @@ impl CPU {
             stack: Stack::new(),
             timers: Timers::new(),
             display: Display::new(),
+            input: InputState::new(),
             program_counter: 0x200, // CHIP-8 programs start at 0x200
         }
     }
 
     pub fn tick(&mut self) {
-
-
         // fetch
         let raw_opcode = self.memory.read_u16(self.program_counter);
 
         // increment program counter
         self.program_counter += 2;
-
 
         // decode
         let opcode: Opcode = Opcode::from_raw(raw_opcode);
@@ -117,14 +116,16 @@ impl CPU {
     }
 
     pub fn is_key_pressed(&self, key: u8) -> bool {
-        // TODO: Implement keyboard input
-        false
+        self.input.is_key_pressed(key)
     }
 
-    pub fn wait_for_key(&mut self, register: u8) {
-        // TODO: Implement keyboard wait
-        // For now, just set a default value
-        self.registers.set_v(register, 0);
+    pub fn wait_for_key(&mut self, register: u8) -> bool {
+        if let Some(key) = self.input.wait_for_key() {
+            self.registers.set_v(register, key);
+            true // Key was pressed, continue execution
+        } else {
+            false // Still waiting for key, don't advance PC
+        }
     }
 
     pub fn get_delay_timer(&self) -> u8 {
@@ -139,11 +140,23 @@ impl CPU {
         self.timers.set_sound(value);
     }
 
-    pub fn render_display(&self) -> std::io::Result<()> {
-        self.display.render()
+    pub fn render_to_buffer(&mut self, buffer: &mut [u8]) {
+        self.display.render_to_buffer(buffer);
     }
 
     pub fn update_timers(&mut self) {
         self.timers.tick();
+    }
+
+    pub fn handle_key_press(&mut self, key: winit::event::VirtualKeyCode) {
+        self.input.handle_key_press(key);
+    }
+
+    pub fn handle_key_release(&mut self, key: winit::event::VirtualKeyCode) {
+        self.input.handle_key_release(key);
+    }
+
+    pub fn is_waiting_for_key(&self) -> bool {
+        self.input.is_waiting_for_key()
     }
 }

@@ -278,7 +278,10 @@ impl Opcode {
                 cpu.set_register(*register, cpu.get_delay_timer());
             }
             Opcode::WaitForKey { register } => {
-                cpu.wait_for_key(*register);
+                if !cpu.wait_for_key(*register) {
+                    // Still waiting for key, go back to execute this instruction again
+                    cpu.set_program_counter(cpu.get_program_counter() - 2);
+                }
             }
             Opcode::SetDelayTimer { register } => {
                 let value = cpu.get_register(*register);
