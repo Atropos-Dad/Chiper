@@ -75,7 +75,7 @@ impl Display {
 
         for row in 0..height {
             for col in 0..width {
-                let sprite_pixel = (sprite.data[row] >> (PIXEL_BIT_SHIFT - col)) & 1;
+                let sprite_pixel = (sprite.data[row] >> (PIXEL_BIT_SHIFT - col as u8)) & 1;
                 let display_x = (x as usize + col) % DISPLAY_WIDTH;
                 let display_y = (y as usize + row) % DISPLAY_HEIGHT;
 

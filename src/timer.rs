@@ -1,15 +1,23 @@
 
+use rodio::{OutputStream, Sink, Source};
+use std::time::Duration;
 
 pub struct Timers{
     delay_timer: u8,
     sound_timer: u8,
+    _stream: OutputStream,
+    sink: Sink,
 }
 
 impl Timers {
     pub fn new() -> Self {
+        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+        let sink = Sink::try_new(&stream_handle).unwrap();
         Self {
             delay_timer: 0,
             sound_timer: 0,
+            _stream,
+            sink,
         }
     }
 
@@ -19,6 +27,17 @@ impl Timers {
         }
         if self.sound_timer > 0 {
             self.sound_timer -= 1;
+            // Play beep sound while timer is active
+            if self.sink.empty() {
+                let source = rodio::source::SineWave::new(440.0)
+                    .take_duration(Duration::from_millis(100))
+                    .amplify(0.05);
+                self.sink.append(source);
+                self.sink.play();
+            }
+        } else {
+            // Stop sound when timer reaches 0
+            self.sink.stop();
         }
     }
 
