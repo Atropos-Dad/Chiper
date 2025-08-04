@@ -1,18 +1,18 @@
 
-use rodio::{OutputStream, Sink, Source};
+use rodio::{OutputStreamBuilder, Sink, Source};
 use std::time::Duration;
 
 pub struct Timers{
     delay_timer: u8,
     sound_timer: u8,
-    _stream: OutputStream,
+    _stream: rodio::OutputStream,
     sink: Sink,
 }
 
 impl Timers {
     pub fn new() -> Self {
-        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-        let sink = Sink::try_new(&stream_handle).unwrap();
+        let _stream = OutputStreamBuilder::open_default_stream().unwrap();
+        let sink = Sink::connect_new(_stream.mixer());
         Self {
             delay_timer: 0,
             sound_timer: 0,

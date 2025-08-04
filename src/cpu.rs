@@ -156,11 +156,11 @@ impl CPU {
         self.timers.tick();
     }
 
-    pub fn handle_key_press(&mut self, key: winit::event::VirtualKeyCode) {
+    pub fn handle_key_press(&mut self, key: winit::keyboard::KeyCode) {
         self.input.handle_key_press(key);
     }
 
-    pub fn handle_key_release(&mut self, key: winit::event::VirtualKeyCode) {
+    pub fn handle_key_release(&mut self, key: winit::keyboard::KeyCode) {
         self.input.handle_key_release(key);
     }
 

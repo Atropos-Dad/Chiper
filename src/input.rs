@@ -1,4 +1,4 @@
-use winit::event::VirtualKeyCode;
+use winit::keyboard::KeyCode;
 use std::collections::HashSet;
 
 pub struct InputState {
@@ -16,14 +16,14 @@ impl InputState {
         }
     }
 
-    pub fn handle_key_press(&mut self, key: VirtualKeyCode) {
+    pub fn handle_key_press(&mut self, key: KeyCode) {
         if let Some(chip8_key) = self.map_key_to_chip8(key) {
             self.pressed_keys.insert(chip8_key);
             self.last_key_pressed = Some(chip8_key);
         }
     }
 
-    pub fn handle_key_release(&mut self, key: VirtualKeyCode) {
+    pub fn handle_key_release(&mut self, key: KeyCode) {
         if let Some(chip8_key) = self.map_key_to_chip8(key) {
             self.pressed_keys.remove(&chip8_key);
         }
@@ -47,7 +47,7 @@ impl InputState {
         self.waiting_for_key
     }
 
-    fn map_key_to_chip8(&self, key: VirtualKeyCode) -> Option<u8> {
+    fn map_key_to_chip8(&self, key: KeyCode) -> Option<u8> {
         match key {
             // CHIP-8 Keypad Layout:
             // 1 2 3 C
@@ -60,25 +60,25 @@ impl InputState {
             // Q W E R
             // A S D F
             // Z X C V
-            VirtualKeyCode::Key1 => Some(0x1),
-            VirtualKeyCode::Key2 => Some(0x2),
-            VirtualKeyCode::Key3 => Some(0x3),
-            VirtualKeyCode::Key4 => Some(0xC),
+            KeyCode::Digit1 => Some(0x1),
+            KeyCode::Digit2 => Some(0x2),
+            KeyCode::Digit3 => Some(0x3),
+            KeyCode::Digit4 => Some(0xC),
             
-            VirtualKeyCode::Q => Some(0x4),
-            VirtualKeyCode::W => Some(0x5),
-            VirtualKeyCode::E => Some(0x6),
-            VirtualKeyCode::R => Some(0xD),
+            KeyCode::KeyQ => Some(0x4),
+            KeyCode::KeyW => Some(0x5),
+            KeyCode::KeyE => Some(0x6),
+            KeyCode::KeyR => Some(0xD),
             
-            VirtualKeyCode::A => Some(0x7),
-            VirtualKeyCode::S => Some(0x8),
-            VirtualKeyCode::D => Some(0x9),
-            VirtualKeyCode::F => Some(0xE),
+            KeyCode::KeyA => Some(0x7),
+            KeyCode::KeyS => Some(0x8),
+            KeyCode::KeyD => Some(0x9),
+            KeyCode::KeyF => Some(0xE),
             
-            VirtualKeyCode::Z => Some(0xA),
-            VirtualKeyCode::X => Some(0x0),
-            VirtualKeyCode::C => Some(0xB),
-            VirtualKeyCode::V => Some(0xF),
+            KeyCode::KeyZ => Some(0xA),
+            KeyCode::KeyX => Some(0x0),
+            KeyCode::KeyC => Some(0xB),
+            KeyCode::KeyV => Some(0xF),
             
             _ => None,
         }
