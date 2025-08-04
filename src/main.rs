@@ -13,13 +13,27 @@ use winit::dpi::LogicalSize;
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
+use std::env;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
     
-    println!("Starting CHIP-8 emulator...");
+    let args: Vec<String> = env::args().collect();
     
-    let config = EmulatorConfig::default();
+    if args.len() < 2 {
+        println!("CHIP-8 Emulator");
+        println!("Usage: {} <rom_file>", args[0]);
+        println!("  rom_file: Path to CHIP-8 ROM file (.ch8)");
+        println!();
+        println!("Example: {} PONG.ch8", args[0]);
+        return Ok(());
+    }
+    
+    let rom_path = args[1].clone();
+    println!("Starting CHIP-8 emulator with ROM: {}", rom_path);
+    
+    let mut config = EmulatorConfig::default();
+    config.rom_path = rom_path;
     let (window_width, window_height) = Emulator::window_dimensions(&config);
     
     let event_loop = EventLoop::new();
