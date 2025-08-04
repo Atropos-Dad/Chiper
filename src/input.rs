@@ -5,6 +5,7 @@ pub struct InputState {
     pressed_keys: HashSet<u8>,
     last_key_pressed: Option<u8>,
     waiting_for_key: bool,
+    key_for_wait: Option<u8>,
 }
 
 impl InputState {
@@ -13,6 +14,7 @@ impl InputState {
             pressed_keys: HashSet::new(),
             last_key_pressed: None,
             waiting_for_key: false,
+            key_for_wait: None,
         }
     }
 
@@ -20,6 +22,11 @@ impl InputState {
         if let Some(chip8_key) = self.map_key_to_chip8(key) {
             self.pressed_keys.insert(chip8_key);
             self.last_key_pressed = Some(chip8_key);
+            
+            // If we're waiting for a key, store it
+            if self.waiting_for_key && self.key_for_wait.is_none() {
+                self.key_for_wait = Some(chip8_key);
+            }
         }
     }
 
@@ -34,11 +41,24 @@ impl InputState {
     }
 
     pub fn wait_for_key(&mut self) -> Option<u8> {
-        if let Some(key) = self.last_key_pressed.take() {
-            self.waiting_for_key = false;
-            Some(key)
-        } else {
+        if !self.waiting_for_key {
+            // Start waiting for a key
             self.waiting_for_key = true;
+            self.key_for_wait = None;
+            None
+        } else if let Some(key) = self.key_for_wait {
+            // A key was pressed while waiting, now wait for it to be released
+            if !self.pressed_keys.contains(&key) {
+                // Key has been released, we can return it
+                self.waiting_for_key = false;
+                self.key_for_wait = None;
+                Some(key)
+            } else {
+                // Key is still pressed, keep waiting
+                None
+            }
+        } else {
+            // Still waiting for a key press
             None
         }
     }

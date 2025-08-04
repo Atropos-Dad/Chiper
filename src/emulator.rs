@@ -166,10 +166,10 @@ impl Emulator {
         let frame_duration = Duration::from_nanos(NANOSECONDS_PER_SECOND / self.config.target_fps as u64);
         
         if elapsed >= frame_duration {
-            if !self.cpu.is_waiting_for_key() {
-                for _ in 0..self.config.cycles_per_frame {
-                    self.cpu.tick();
-                }
+            // Always execute at least one cycle per frame, even when waiting for key
+            // This allows the wait_for_key instruction to check if a key was pressed
+            for _ in 0..self.config.cycles_per_frame {
+                self.cpu.tick();
             }
             
             self.cpu.update_timers();
