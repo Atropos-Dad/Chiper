@@ -80,7 +80,7 @@ impl CPU {
         self.stack.pop()
     }
     pub fn push_stack(&mut self, value: u16) {
-        self.stack.push(value);
+        let _ = self.stack.push(value);
     }
 
     pub fn get_program_counter(&self) -> u16 {

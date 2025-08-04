@@ -49,7 +49,7 @@ impl Emulator {
         let mut cpu = CPU::new();
         
         // Load ROM
-        match crate::memory::rom_file::load_from_file(&config.rom_path) {
+        match crate::memory::RomFile::load_from_file(&config.rom_path) {
             Ok(rom) => {
                 println!("Loaded {} successfully!", config.rom_path);
                 for (i, byte) in rom.data.iter().enumerate() {

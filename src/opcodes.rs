@@ -63,7 +63,7 @@ const BCD_TENS: u8 = 10;                  // BCD tens divisor
 
 pub enum Opcode {
     // opcode: u16, // 2 bytes, 16 bits total, big endian...
-    CallRoutine { address: u16 }, // 0NNN
+    CallRoutine, // 0NNN
     ClearDisplay {}, // 00E0
     Return {}, // 00EE
     Goto { address: u16 }, // 1NNN
@@ -118,7 +118,7 @@ impl Opcode {
         match nibbles {
             (0x0, 0x0, 0xE, 0x0) => Opcode::ClearDisplay {},
             (0x0, 0x0, 0xE, 0xE) => Opcode::Return {},
-            (0x0, _, _, _) => Opcode::CallRoutine { address: nnn },
+            (0x0, _, _, _) => Opcode::CallRoutine,
             (0x1, _, _, _) => Opcode::Goto { address: nnn },
             (0x2, _, _, _) => Opcode::CallSubroutine { address: nnn },
             (0x3, _, _, _) => Opcode::SkipIfEqual { register: x, value: nn },
@@ -159,7 +159,7 @@ impl Opcode {
         use rand::Rng;
         
         match self {
-            Opcode::CallRoutine { address: _ } => {
+            Opcode::CallRoutine => {
                 unimplemented!("CallRoutine not implemented for modern CHIP-8")
             }
             Opcode::ClearDisplay {} => {

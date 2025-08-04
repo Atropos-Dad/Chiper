@@ -49,21 +49,11 @@ impl Memory {
 }
 
 
-pub struct rom_file {
+pub struct RomFile {
     pub data: Vec<u8>,
 }
 
-impl rom_file {
-    pub fn new(data: Vec<u8>) -> Self {
-        Self { data }
-    }
-
-    pub fn load_to_memory(&self, memory: &mut Memory, start_address: u16) {
-        for (i, &byte) in self.data.iter().enumerate() {
-            memory.write(start_address + i as u16, byte);
-        }
-    }
-
+impl RomFile {
     pub fn load_from_file(file_path: &str) -> Result<Self, std::io::Error> {
         let data = std::fs::read(file_path)?;
         Ok(Self { data })
