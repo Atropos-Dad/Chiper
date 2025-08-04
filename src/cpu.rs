@@ -6,6 +6,7 @@ use crate::timer::Timers;
 use crate::display::{Display};
 use crate::opcodes::Opcode;
 use crate::input::InputState;
+use crate::font::FONT_SET;
 
 // CPU constants
 const PROGRAM_START_ADDRESS: u16 = 0x200;  // CHIP-8 programs start at 0x200
@@ -14,6 +15,7 @@ const DISPLAY_HEIGHT: u8 = 32;              // Display height for wrapping
 const DISPLAY_WIDTH: u8 = 64;               // Display width for wrapping
 const SPRITE_WIDTH: u8 = 8;                 // Standard sprite width
 const PIXEL_BIT_SHIFT: u8 = 7;              // Bit shift for pixel extraction
+const FONT_START_ADDRESS: u16 = 0x50;       // Font data starts at 0x50
 
 pub struct CPU {
     registers: Registers,
@@ -27,7 +29,7 @@ pub struct CPU {
 
 impl CPU {
     pub fn new() -> Self {
-        Self {
+        let mut cpu = Self {
             registers: Registers::new(),
             memory: Memory::new(),
             stack: Stack::new(),
@@ -35,7 +37,14 @@ impl CPU {
             display: Display::new(),
             input: InputState::new(),
             program_counter: PROGRAM_START_ADDRESS,
+        };
+        
+        // Load font data into memory starting at 0x50
+        for (i, &byte) in FONT_SET.iter().enumerate() {
+            cpu.memory.write(FONT_START_ADDRESS + i as u16, byte);
         }
+        
+        cpu
     }
 
     pub fn tick(&mut self) {

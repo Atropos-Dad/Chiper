@@ -6,7 +6,7 @@ Only the upper 4 bits of each byte are used.
 Characters 0-F (hexadecimal digits)
 */
 
-const _FONT_SET: [u8; 80] = [
+pub const FONT_SET: [u8; 80] = [
     // Character '0'
     0xF0, // ****
     0x90, // *  *

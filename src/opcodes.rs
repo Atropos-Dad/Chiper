@@ -58,6 +58,7 @@ const V0_REGISTER_INDEX: u8 = 0;          // Index of V0 register
 const INSTRUCTION_SIZE: u16 = 2;          // Size of each instruction in bytes
 const NIBBLE_MASK: u8 = 0xF;              // Mask for single nibble
 const FONT_CHAR_SIZE: u16 = 5;            // Size of each font character in bytes
+const FONT_START_ADDRESS: u16 = 0x50;     // Font data starts at 0x50
 const BCD_HUNDREDS: u8 = 100;             // BCD hundreds divisor
 const BCD_TENS: u8 = 10;                  // BCD tens divisor
 
@@ -307,7 +308,7 @@ impl Opcode {
             }
             Opcode::SetSpriteAddress { register } => {
                 let sprite_idx = cpu.get_register(*register) & NIBBLE_MASK;
-                cpu.set_address_register(sprite_idx as u16 * FONT_CHAR_SIZE);
+                cpu.set_address_register(FONT_START_ADDRESS + (sprite_idx as u16 * FONT_CHAR_SIZE));
             }
             Opcode::StoreBCD { register } => {
                 let value = cpu.get_register(*register);
