@@ -173,7 +173,4 @@ impl CPU {
         self.input.handle_key_release(key);
     }
 
-    pub fn is_waiting_for_key(&self) -> bool {
-        self.input.is_waiting_for_key()
-    }
 }

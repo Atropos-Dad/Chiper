@@ -63,9 +63,6 @@ impl InputState {
         }
     }
 
-    pub fn is_waiting_for_key(&self) -> bool {
-        self.waiting_for_key
-    }
 
     fn map_key_to_chip8(&self, key: KeyCode) -> Option<u8> {
         match key {
