@@ -24,12 +24,12 @@
   <table>
     <tr>
       <td align="center">
-        <img src="media/chip8_recording_optimized.gif" alt="CHIP-8 Demo 1" width="400" loading="lazy"/>
+        <img src="media/chip8_recording_1754270801.gif" alt="CHIP-8 Demo 1" width="400" loading="lazy"/>
         <br />
         <em>Classic Game Running</em>
       </td>
       <td align="center">
-        <img src="media/chip8_PONG2_optimized.gif" alt="PONG2 Demo" width="400" loading="lazy"/>
+        <img src="media/chip8_PONG2_1754507695.gif" alt="PONG2 Demo" width="400" loading="lazy"/>
         <br />
         <em>PONG2 in Action</em>
       </td>
