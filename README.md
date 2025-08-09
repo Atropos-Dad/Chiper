@@ -3,16 +3,16 @@
 <div align="center">
   
   ![Rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white)
-  ![SDL2](https://img.shields.io/badge/SDL2-1E1E1E?style=for-the-badge&logo=sdl&logoColor=white)
+  ![winit](https://img.shields.io/badge/winit-1E1E1E?style=for-the-badge&logoColor=white)
   ![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)
   
-  **Another rust CHIP-8 Interpreter written in Rust with SDL2**
+  **Another rust CHIP-8 Interpreter written in Rust**
   
 </div>
 
 ---
 
-This was done MOSTLY for fun and learning, but I do think this is pretty cute and has some features I think make chip8 experiences nicer! Mostly the *phosphor* effect which mitigates some of the [chip8's flicker](www.reddit.com/r/EmuDev/comments/n9dcli/is_chip_8_emulator_flicker_normal/). 
+This was done MOSTLY for fun and learning, but I do think this is pretty cute and has some features I think make chip8 experiences nicer! Mostly the *phosphor* effect which mitigates some of [chip8's flicker](www.reddit.com/r/EmuDev/comments/n9dcli/is_chip_8_emulator_flicker_normal/). 
 Some stuff still needs to be done (especially interpreting the whole suite of chip8 derivatives!).
 
 
@@ -47,7 +47,6 @@ Some stuff still needs to be done (especially interpreting the whole suite of ch
 ### Prerequisites
 
 - Rust (1.70 or later)
-- SDL2 development libraries
 
 ### Installation
 
@@ -101,7 +100,6 @@ cargo clippy
 ## 🙏 Acknowledgments
 
 - CHIP-8 was originally developed by Joseph Weisbecker
-- SDL2 bindings for Rust by the rust-sdl2 team
 - The amazing CHIP-8 community for documentation and test ROMs
 
 ---
