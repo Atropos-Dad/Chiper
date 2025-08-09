@@ -31,7 +31,7 @@ Some stuff still needs to be done (especially interpreting the whole suite of ch
       <td align="center">
         <img src="media/chip8_recording_1754270801.gif" alt="CHIP-8 Demo 1" width="400" loading="lazy"/>
         <br />
-        <em>Classic Game Running</em>
+        <em>Space Invaders!</em>
       </td>
       <td align="center">
         <img src="media/chip8_PONG2_1754507695.gif" alt="PONG2 Demo" width="400" loading="lazy"/>
