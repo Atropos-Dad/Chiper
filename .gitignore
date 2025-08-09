@@ -2,3 +2,4 @@
 *.ch8
 *.log
 *.md
+!README.md
