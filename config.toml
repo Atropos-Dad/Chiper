@@ -1,0 +1,54 @@
+# CHIP-8 Emulator Configuration
+
+[display]
+# Phosphor decay rate - how quickly pixels fade (0-255, higher = faster fade)
+phosphor_decay_rate = 15
+
+# Maximum phosphor brightness value
+max_phosphor_value = 255
+
+# Window scale factor - how much to scale up the 64x32 display
+default_scale_factor = 10
+
+[display.color]
+# Color channel divisors control the phosphor color
+# 1 = full brightness, higher values = dimmer
+# Default creates a classic green phosphor look
+red_divisor = 4    # Slight red tint
+green_divisor = 1  # Full green
+blue_divisor = 8   # Very slight blue
+
+# Background color in RGBA format
+background = [0, 0, 0, 255]  # Black
+
+# Example color schemes:
+# Amber monitor: red_divisor = 1, green_divisor = 2, blue_divisor = 8
+# White/Gray: red_divisor = 1, green_divisor = 1, blue_divisor = 1
+# Blue: red_divisor = 8, green_divisor = 4, blue_divisor = 1
+
+[audio]
+# Frequency of the beep sound in Hz (440 = A4 note)
+beep_frequency_hz = 440.0
+
+# Volume (0.0 to 1.0)
+beep_volume = 0.05
+
+[cpu]
+# Target frames per second
+target_fps = 60
+
+# CPU cycles to execute per frame (affects game speed)
+cycles_per_frame = 10
+
+[recording]
+# Scale factor for GIF recordings (smaller than display for file size)
+gif_scale_factor = 8
+
+# Delay between GIF frames in centiseconds (4 = 40ms = 25 FPS)
+gif_frame_delay = 4
+
+# Record every Nth frame (3 = every 4th frame)
+gif_frame_skip = 3
+
+# Output directory for recordings
+output_dir = "."

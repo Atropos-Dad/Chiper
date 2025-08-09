@@ -1,16 +1,23 @@
 
 use rodio::{OutputStreamBuilder, Sink, Source};
 use std::time::Duration;
+use crate::settings::AudioSettings;
+use std::sync::Arc;
 
 pub struct Timers{
     delay_timer: u8,
     sound_timer: u8,
     _stream: rodio::OutputStream,
     sink: Sink,
+    settings: Arc<AudioSettings>,
 }
 
 impl Timers {
     pub fn new() -> Self {
+        Self::with_settings(Arc::new(AudioSettings::default()))
+    }
+    
+    pub fn with_settings(settings: Arc<AudioSettings>) -> Self {
         let _stream = OutputStreamBuilder::open_default_stream().unwrap();
         let sink = Sink::connect_new(_stream.mixer());
         Self {
@@ -18,6 +25,7 @@ impl Timers {
             sound_timer: 0,
             _stream,
             sink,
+            settings,
         }
     }
 
@@ -29,9 +37,9 @@ impl Timers {
             self.sound_timer -= 1;
             // Play beep sound while timer is active
             if self.sink.empty() {
-                let source = rodio::source::SineWave::new(440.0)
+                let source = rodio::source::SineWave::new(self.settings.beep_frequency_hz)
                     .take_duration(Duration::from_millis(100))
-                    .amplify(0.05);
+                    .amplify(self.settings.beep_volume);
                 self.sink.append(source);
                 self.sink.play();
             }

@@ -7,15 +7,14 @@ use crate::display::{Display};
 use crate::opcodes::Opcode;
 use crate::input::InputState;
 use crate::font::FONT_SET;
+use crate::constants::{PROGRAM_START_ADDRESS, INSTRUCTION_SIZE, FONT_START_ADDRESS,
+                        DISPLAY_WIDTH, DISPLAY_HEIGHT};
+use crate::settings::{Settings, DisplaySettings, AudioSettings};
+use std::sync::Arc;
 
-// CPU constants
-const PROGRAM_START_ADDRESS: u16 = 0x200;  // CHIP-8 programs start at 0x200
-const INSTRUCTION_SIZE: u16 = 2;            // Size of each instruction in bytes
-const DISPLAY_HEIGHT: u8 = 32;              // Display height for wrapping
-const DISPLAY_WIDTH: u8 = 64;               // Display width for wrapping
+// CPU-specific constants
 const SPRITE_WIDTH: u8 = 8;                 // Standard sprite width
 const PIXEL_BIT_SHIFT: u8 = 7;              // Bit shift for pixel extraction
-const FONT_START_ADDRESS: u16 = 0x50;       // Font data starts at 0x50
 
 pub struct CPU {
     registers: Registers,
@@ -29,12 +28,16 @@ pub struct CPU {
 
 impl CPU {
     pub fn new() -> Self {
+        Self::with_settings(Settings::default())
+    }
+    
+    pub fn with_settings(settings: Settings) -> Self {
         let mut cpu = Self {
             registers: Registers::new(),
             memory: Memory::new(),
             stack: Stack::new(),
-            timers: Timers::new(),
-            display: Display::new(),
+            timers: Timers::with_settings(Arc::new(settings.audio)),
+            display: Display::with_settings(Arc::new(settings.display)),
             input: InputState::new(),
             program_counter: PROGRAM_START_ADDRESS,
         };
@@ -114,10 +117,10 @@ impl CPU {
         
         for row in 0..height {
             let sprite_byte = self.memory.read(addr + row as u16);
-            let y_pos = (y + row) % DISPLAY_HEIGHT;
+            let y_pos = (y + row) % (DISPLAY_HEIGHT as u8);
             
             for col in 0..SPRITE_WIDTH {
-                let x_pos = (x + col) % DISPLAY_WIDTH;
+                let x_pos = (x + col) % (DISPLAY_WIDTH as u8);
                 let pixel = (sprite_byte >> (PIXEL_BIT_SHIFT - col)) & 1;
                 
                 if pixel == 1 {

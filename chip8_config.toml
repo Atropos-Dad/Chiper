@@ -1,0 +1,26 @@
+# CHIP-8 Emulator Configuration File
+
+[display]
+phosphor_decay_rate = 0      # How quickly phosphor fades (0-255)
+max_phosphor_value = 255      # Maximum brightness
+default_scale_factor = 10      # Window scale factor
+
+[display.color]
+red_divisor = 4               # Red channel divisor (higher = dimmer)
+green_divisor = 1             # Green channel divisor  
+blue_divisor = 8              # Blue channel divisor
+background = [0, 0, 0, 255]   # Background color RGBA
+
+[audio]
+beep_frequency_hz = 440.0     # A4 note (440 Hz)
+beep_volume = 0.15            # Volume (0.0 to 1.0)
+
+[cpu]
+target_fps = 60               # Target frames per second
+cycles_per_frame = 10         # CPU cycles per frame
+
+[recording]
+gif_scale_factor = 8          # GIF scale factor
+gif_frame_delay = 4           # Delay between frames (centiseconds)
+gif_frame_skip = 3            # Record every Nth frame
+output_dir = "."              # Output directory for recordings

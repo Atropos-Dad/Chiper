@@ -8,31 +8,31 @@ The carry flag (VF) is set to 1 if any screen pixels are flipped from set to uns
 This is used for collision detection. 
  */
 
-// Display constants
-const DISPLAY_WIDTH: usize = 64;
-const DISPLAY_HEIGHT: usize = 32;
+use crate::constants::{DISPLAY_WIDTH, DISPLAY_HEIGHT};
+use crate::settings::DisplaySettings;
+use std::sync::Arc;
 
-
-// Phosphor display constants
-const MAX_PHOSPHOR_VALUE: u8 = 255;        // Maximum phosphor brightness
-const PHOSPHOR_DECAY_RATE: u8 = 15;        // How fast phosphor decays per frame
+// Display-specific constants that don't change
 const RGBA_PIXEL_SIZE: usize = 4;          // Bytes per RGBA pixel
-const RED_CHANNEL_DIVISOR: u8 = 4;         // Red channel brightness divisor
-const BLUE_CHANNEL_DIVISOR: u8 = 8;        // Blue channel brightness divisor
-const ALPHA_CHANNEL_VALUE: u8 = 255;       // Alpha channel (fully opaque)
 
 pub struct Display {
     display: [[bool; DISPLAY_WIDTH]; DISPLAY_HEIGHT], // 64x32 pixels, 1 bit per pixel
     phosphor: [[u8; DISPLAY_WIDTH]; DISPLAY_HEIGHT], // Phosphor decay values (0-255)
+    settings: Arc<DisplaySettings>,
 }
 
 
 
 impl Display {
     pub fn new() -> Self {
+        Self::with_settings(Arc::new(DisplaySettings::default()))
+    }
+    
+    pub fn with_settings(settings: Arc<DisplaySettings>) -> Self {
         Self { 
             display: [[false; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
             phosphor: [[0; DISPLAY_WIDTH]; DISPLAY_HEIGHT],
+            settings,
         }
     }
 
@@ -53,17 +53,17 @@ impl Display {
                 
                 // Update phosphor decay
                 if !self.display[y][x] && self.phosphor[y][x] > 0 {
-                    self.phosphor[y][x] = self.phosphor[y][x].saturating_sub(PHOSPHOR_DECAY_RATE);
+                    self.phosphor[y][x] = self.phosphor[y][x].saturating_sub(self.settings.phosphor_decay_rate);
                 }
                 
                 // Render based on phosphor value (not just on/off)
                 let brightness = self.phosphor[y][x];
                 
                 // Classic green phosphor color with brightness
-                buffer[pixel_index] = (brightness / RED_CHANNEL_DIVISOR).min(ALPHA_CHANNEL_VALUE);     // R (slight red)
-                buffer[pixel_index + 1] = brightness;                                                   // G (full green)
-                buffer[pixel_index + 2] = (brightness / BLUE_CHANNEL_DIVISOR).min(ALPHA_CHANNEL_VALUE); // B (very slight blue)
-                buffer[pixel_index + 3] = ALPHA_CHANNEL_VALUE;                                          // A (always opaque)
+                buffer[pixel_index] = (brightness / self.settings.color.red_divisor).min(255);     // R (slight red)
+                buffer[pixel_index + 1] = brightness / self.settings.color.green_divisor;          // G (full green)
+                buffer[pixel_index + 2] = (brightness / self.settings.color.blue_divisor).min(255); // B (very slight blue)
+                buffer[pixel_index + 3] = 255;                                                      // A (always opaque)
             }
         }
     }
@@ -83,7 +83,7 @@ impl Display {
         
         // If pixel is now on, set phosphor to max
         if self.display[y][x] {
-            self.phosphor[y][x] = MAX_PHOSPHOR_VALUE;
+            self.phosphor[y][x] = self.settings.max_phosphor_value;
         }
         // If pixel turned off, phosphor will decay naturally
     }

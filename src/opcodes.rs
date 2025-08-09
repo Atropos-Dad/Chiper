@@ -52,13 +52,13 @@ FX55 	MEM 	reg_dump(Vx, &I) 	Stores from V0 to VX (including VX) in memory, star
 FX65 	MEM 	reg_load(Vx, &I) 	Fills from V0 to VX (including VX) with values from memory, starting at address I. The offset from I is increased by 1 for each value read, but I itself is left unmodified.[d][24]
  */
 
-// Key opcode constants
+use crate::constants::{INSTRUCTION_SIZE, FONT_START_ADDRESS};
+
+// Opcode-specific constants
 const VF_REGISTER_INDEX: u8 = 0xF;        // Index of VF register (flags)
 const V0_REGISTER_INDEX: u8 = 0;          // Index of V0 register
-const INSTRUCTION_SIZE: u16 = 2;          // Size of each instruction in bytes
 const NIBBLE_MASK: u8 = 0xF;              // Mask for single nibble
 const FONT_CHAR_SIZE: u16 = 5;            // Size of each font character in bytes
-const FONT_START_ADDRESS: u16 = 0x50;     // Font data starts at 0x50
 const BCD_HUNDREDS: u8 = 100;             // BCD hundreds divisor
 const BCD_TENS: u8 = 10;                  // BCD tens divisor
 

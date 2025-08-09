@@ -3,20 +3,18 @@ use std::fs::File;
 use std::io::BufWriter;
 use std::thread;
 use crossbeam_channel::{Sender, Receiver, bounded};
+use crate::constants::{DISPLAY_WIDTH, DISPLAY_HEIGHT};
+use crate::settings::RecordingSettings;
+use std::sync::Arc;
 
-// Constants for better maintainability
-const DISPLAY_WIDTH: usize = 64;
-const DISPLAY_HEIGHT: usize = 32;
-const GIF_SCALE_FACTOR: u16 = 8;
-const GIF_FRAME_DELAY: u16 = 4; // 40ms per frame (25 FPS playback)
-const DEFAULT_FRAME_SKIP: u32 = 3; // Record every 4th frame (15 FPS at 60 FPS emulation)
+// Buffer size constant that doesn't change
 const RECORDING_BUFFER_SIZE: usize = 30; // Buffer up to 30 frames
 
 pub struct GifRecorder {
     sender: Option<Sender<RecordCommand>>,
     thread_handle: Option<thread::JoinHandle<()>>,
-    frame_skip: u32,
     frame_count: u32,
+    settings: Arc<RecordingSettings>,
 }
 
 enum RecordCommand {
@@ -26,11 +24,15 @@ enum RecordCommand {
 
 impl GifRecorder {
     pub fn new() -> Self {
+        Self::with_settings(Arc::new(RecordingSettings::default()))
+    }
+    
+    pub fn with_settings(settings: Arc<RecordingSettings>) -> Self {
         Self {
             sender: None,
             thread_handle: None,
-            frame_skip: DEFAULT_FRAME_SKIP, // Record every 4th frame (15 FPS at 60 FPS emulation)
             frame_count: 0,
+            settings,
         }
     }
 
@@ -57,8 +59,9 @@ impl GifRecorder {
         self.frame_count = 0;
 
         let filename = filename.to_string();
+        let settings = self.settings.clone();
         let thread_handle = thread::spawn(move || {
-            if let Err(e) = recording_thread(receiver, filename) {
+            if let Err(e) = recording_thread(receiver, filename, settings) {
                 eprintln!("Recording thread error: {}", e);
             }
         });
@@ -73,7 +76,7 @@ impl GifRecorder {
             self.frame_count += 1;
             
             // Skip frames to reduce load
-            if self.frame_count % (self.frame_skip + 1) != 0 {
+            if self.frame_count % (self.settings.gif_frame_skip + 1) != 0 {
                 return Ok(());
             }
 
@@ -110,10 +113,6 @@ impl GifRecorder {
         self.sender.is_some()
     }
 
-    #[allow(dead_code)]
-    pub fn set_frame_skip(&mut self, skip: u32) {
-        self.frame_skip = skip;
-    }
 }
 
 impl Drop for GifRecorder {
@@ -124,18 +123,18 @@ impl Drop for GifRecorder {
     }
 }
 
-fn recording_thread(receiver: Receiver<RecordCommand>, filename: String) -> Result<(), Box<dyn std::error::Error>> {
+fn recording_thread(receiver: Receiver<RecordCommand>, filename: String, settings: Arc<RecordingSettings>) -> Result<(), Box<dyn std::error::Error>> {
     let file = File::create(&filename)?;
     let writer = BufWriter::new(file);
     
-    let scale_factor = GIF_SCALE_FACTOR;
+    let scale_factor = settings.gif_scale_factor;
     let scaled_width = (DISPLAY_WIDTH * scale_factor as usize) as u16;
     let scaled_height = (DISPLAY_HEIGHT * scale_factor as usize) as u16;
     
     let mut encoder = Encoder::new(writer, scaled_width, scaled_height, &[])?;
     encoder.set_repeat(Repeat::Infinite)?;
     
-    let frame_delay = GIF_FRAME_DELAY; // 40ms per frame (25 FPS playback)
+    let frame_delay = settings.gif_frame_delay; // Delay in centiseconds
 
     loop {
         match receiver.recv()? {
