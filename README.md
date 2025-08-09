@@ -1,4 +1,4 @@
-# 🎮 CHIP-8 Interpreter
+# 🍟 Chiper - A CHIP-8 Interpreter
 
 <div align="center">
   
