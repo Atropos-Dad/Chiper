@@ -27,17 +27,26 @@
   <table>
     <tr>
       <td align="center">
-        <img src="media/chip8_recording_1754270801.gif" alt="CHIP-8 Demo 1" width="400"/>
+        <img src="media/chip8_recording_optimized.gif" alt="CHIP-8 Demo 1" width="400" loading="lazy"/>
         <br />
         <em>Classic Game Running</em>
       </td>
       <td align="center">
-        <img src="media/chip8_PONG2_1754507695.gif" alt="PONG2 Demo" width="400"/>
+        <img src="media/chip8_PONG2_optimized.gif" alt="PONG2 Demo" width="400" loading="lazy"/>
         <br />
         <em>PONG2 in Action</em>
       </td>
     </tr>
   </table>
+  
+  <details>
+  <summary>💡 <em>GIFs loading slowly? Click here for tips</em></summary>
+  
+  - The demo GIFs are high-quality recordings (798KB and 1.5MB)
+  - They may take a moment to load on slower connections
+  - Once cached by your browser, they'll load instantly
+  
+  </details>
 </div>
 
 ## 🚀 Quick Start
