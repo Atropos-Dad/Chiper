@@ -9,13 +9,14 @@ use crate::input::InputState;
 use crate::font::FONT_SET;
 use crate::constants::{PROGRAM_START_ADDRESS, INSTRUCTION_SIZE, FONT_START_ADDRESS,
                         DISPLAY_WIDTH, DISPLAY_HEIGHT};
-use crate::settings::{Settings, DisplaySettings, AudioSettings};
+use crate::settings::Settings;
 use std::sync::Arc;
 
 // CPU-specific constants
 const SPRITE_WIDTH: u8 = 8;                 // Standard sprite width
 const PIXEL_BIT_SHIFT: u8 = 7;              // Bit shift for pixel extraction
 
+#[allow(clippy::upper_case_acronyms)]
 pub struct CPU {
     registers: Registers,
     memory: Memory,
@@ -27,6 +28,7 @@ pub struct CPU {
 }
 
 impl CPU {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::with_settings(Settings::default())
     }

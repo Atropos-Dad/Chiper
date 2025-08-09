@@ -24,6 +24,7 @@ pub struct Display {
 
 
 impl Display {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::with_settings(Arc::new(DisplaySettings::default()))
     }
@@ -60,9 +61,9 @@ impl Display {
                 let brightness = self.phosphor[y][x];
                 
                 // Classic green phosphor color with brightness
-                buffer[pixel_index] = (brightness / self.settings.color.red_divisor).min(255);     // R (slight red)
+                buffer[pixel_index] = brightness / self.settings.color.red_divisor;     // R (slight red)
                 buffer[pixel_index + 1] = brightness / self.settings.color.green_divisor;          // G (full green)
-                buffer[pixel_index + 2] = (brightness / self.settings.color.blue_divisor).min(255); // B (very slight blue)
+                buffer[pixel_index + 2] = brightness / self.settings.color.blue_divisor; // B (very slight blue)
                 buffer[pixel_index + 3] = 255;                                                      // A (always opaque)
             }
         }

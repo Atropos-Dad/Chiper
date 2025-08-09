@@ -13,6 +13,7 @@ pub struct Timers{
 }
 
 impl Timers {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::with_settings(Arc::new(AudioSettings::default()))
     }

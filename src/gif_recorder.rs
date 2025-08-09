@@ -23,6 +23,7 @@ enum RecordCommand {
 }
 
 impl GifRecorder {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self::with_settings(Arc::new(RecordingSettings::default()))
     }
@@ -136,19 +137,14 @@ fn recording_thread(receiver: Receiver<RecordCommand>, filename: String, setting
     
     let frame_delay = settings.gif_frame_delay; // Delay in centiseconds
 
-    loop {
-        match receiver.recv()? {
-            RecordCommand::AddFrame(rgba_buffer) => {
-                // Convert and scale in the background thread
-                let scaled_rgb = scale_and_convert_buffer(&rgba_buffer, scale_factor);
-                
-                let mut frame = Frame::from_rgb(scaled_width, scaled_height, &scaled_rgb);
-                frame.delay = frame_delay;
-                
-                encoder.write_frame(&frame)?;
-            }
-            RecordCommand::Stop => break,
-        }
+    while let Ok(RecordCommand::AddFrame(rgba_buffer)) = receiver.recv() {
+        // Convert and scale in the background thread
+        let scaled_rgb = scale_and_convert_buffer(&rgba_buffer, scale_factor);
+        
+        let mut frame = Frame::from_rgb(scaled_width, scaled_height, &scaled_rgb);
+        frame.delay = frame_delay;
+        
+        encoder.write_frame(&frame)?;
     }
 
     drop(encoder); // Finalize the GIF

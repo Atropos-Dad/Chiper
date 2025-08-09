@@ -11,20 +11,13 @@ use std::time::{Duration, Instant};
 
 const NANOSECONDS_PER_SECOND: u64 = 1_000_000_000;
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct EmulatorConfig {
     pub rom_path: String,
     pub settings: Settings,
 }
 
-impl Default for EmulatorConfig {
-    fn default() -> Self {
-        Self {
-            rom_path: String::new(),
-            settings: Settings::default(),
-        }
-    }
-}
+
 
 pub struct Emulator {
     cpu: CPU,
@@ -109,7 +102,7 @@ impl Emulator {
             let filename = GifRecorder::generate_filename(
                 &self.rom_name,
                 &self.config.settings.recording.output_dir,
-                &format!("chip8_{{}}_{{}}") // Simple pattern for now
+                "chip8_{rom_name}_{timestamp}" // Simple pattern for now
             );
             self.gif_recorder.start_recording(&filename)?;
             println!("Started GIF recording: {}", filename);

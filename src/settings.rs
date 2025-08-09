@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct Settings {
     pub display: DisplaySettings,
@@ -85,16 +85,7 @@ pub struct RecordingSettings {
 }
 
 // Default implementations
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            display: DisplaySettings::default(),
-            audio: AudioSettings::default(),
-            cpu: CpuSettings::default(),
-            recording: RecordingSettings::default(),
-        }
-    }
-}
+
 
 impl Default for DisplaySettings {
     fn default() -> Self {
