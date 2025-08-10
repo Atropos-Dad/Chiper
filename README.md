@@ -44,10 +44,6 @@ Some stuff still needs to be done (especially interpreting the whole suite of ch
 
 ## 🚀 Quick Start
 
-### Prerequisites
-
-- Rust (1.70 or later)
-
 ### Installation
 
 ```bash
