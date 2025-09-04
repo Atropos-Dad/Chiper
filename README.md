@@ -13,7 +13,7 @@
 ---
 
 This was done MOSTLY for fun and learning, but I do think this is pretty cute and has some features I think make chip8 experiences nicer! Mostly the *phosphor* effect which mitigates some of [chip8's flicker](www.reddit.com/r/EmuDev/comments/n9dcli/is_chip_8_emulator_flicker_normal/). 
-Some stuff still needs to be done (especially interpreting the whole suite of chip8 derivatives!).
+Some stuff still needs to be done (especially interpreting the whole suite of chip8 derivatives and testing against 'quirks'!).
 
 
 
